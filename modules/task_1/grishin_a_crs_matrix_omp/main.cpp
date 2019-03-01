@@ -11,9 +11,6 @@
 #define ZERO_IN_CRS 0.000001
 #define EPS 0.01
 
-using namespace std;
-
-
 size_t nzA, nzB;
 
 
@@ -162,9 +159,9 @@ void Multiplication(const crsMatrix &A, const crsMatrix &B, crsMatrix &C)
 {
 
     int AN = A.N, BN = B.N, rowNZ, i, j, k, L;
-    vector<int> columns;
-    vector<double> values;
-    vector<int> row_index;
+    std::vector<int> columns;
+    std::vector<double> values;
+    std::vector<int> row_index;
 
 
     row_index.push_back(0);
@@ -236,21 +233,21 @@ int main(int argc, char **argv) {
     serialTime = omp_get_wtime() - serialTime;
 
 
-    cout << "Size of matrix = " << SizeM << "x" << SizeM << endl;
-    cout << "Not NULL elements in ROW = " << NNZRow << endl;
-    cout << "Serial Time: " << fixed << setprecision(8) << serialTime << endl;
+    std::cout << "Size of matrix = " << SizeM << "x" << SizeM << std::endl;
+    std::cout << "Not NULL elements in ROW = " << NNZRow << std::endl;
+    std::cout << "Serial Time: " << std::fixed << std::setprecision(8) << serialTime << std::endl;
 
 
 
     if (SizeM < 10) {
-        cout << "A_________________________" << endl;
+        std::cout << "A_________________________" << std::endl;
         PrintMatrix(A);
-        cout << "Transp B__________________" << endl;
+        std::cout << "Transp B__________________" << std::endl;
         PrintMatrix(B);
         Transp(B);
-        cout << "B_________________________" << endl;
+        std::cout << "B_________________________" << std::endl;
         PrintMatrix(B);
-        cout << "Serial Result_____________" << endl;
+        std::cout << "Serial Result_____________" << std::endl;
         PrintMatrix(C);
     }
 
