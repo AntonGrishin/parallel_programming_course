@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 #include <iomanip>
+#include <cstdlib>
 #include <iostream>
 
 
@@ -41,11 +42,9 @@ void GenerateCRS(crsMatrix& mtx, int n, int cntInRow) {
     notNull = cntInRow * n;
     InitializeMatrix(n, notNull, mtx);
     for (i = 0; i < n; i++) {
-        // Формируем номера столбцов в строке i 
-        for (j = 0; j < cntInRow; j++)
-        {
-            do
-            {
+        // Формируем номера столбцов в строке i
+        for (j = 0; j < cntInRow; j++) {
+            do {
                 mtx.Col[i * cntInRow + j] = rand() % n;
                 f = 0;
                 for (k = 0; k < j; k++)
@@ -56,8 +55,7 @@ void GenerateCRS(crsMatrix& mtx, int n, int cntInRow) {
         // Сортируем номера столбцов в строке i 
         for (j = 0; j < cntInRow - 1; j++)
             for (k = 0; k < cntInRow - 1; k++)
-                if (mtx.Col[i * cntInRow + k] > mtx.Col[i * cntInRow + k + 1])
-                {
+                if (mtx.Col[i * cntInRow + k] > mtx.Col[i * cntInRow + k + 1]) {
                     tmp = mtx.Col[i * cntInRow + k];
                     mtx.Col[i * cntInRow + k] = mtx.Col[i * cntInRow + k + 1];
                     mtx.Col[i * cntInRow + k + 1] = tmp;
@@ -66,8 +64,7 @@ void GenerateCRS(crsMatrix& mtx, int n, int cntInRow) {
     for (i = 0; i < cntInRow * n; i++)
         mtx.Value[i] = rand() % 9 + 1;
     c = 0;
-    for (i = 0; i <= n; i++)
-    {
+    for (i = 0; i <= n; i++) {
         mtx.RowIndex[i] = c;
         c += cntInRow;
     }
@@ -108,23 +105,19 @@ void Transp(crsMatrix &B) {
     for (i = 0; i < B.NZ; i++)
         BT.RowIndex[B.Col[i] + 1]++;
 
-    for (i = 1; i <= B.N; i++)
-    {
+    for (i = 1; i <= B.N; i++) {
         tmp = BT.RowIndex[i];
         BT.RowIndex[i] = S;
         S = S + tmp;
     }
 
-    for (i = 0; i < B.N; i++)
-    {
-
+    for (i = 0; i < B.N; i++) {
         int j1 = B.RowIndex[i];
         int j2 = B.RowIndex[i + 1];
-        int Col = i; // Столбец в AT - строка в А
-        for (j = j1; j < j2; j++)
-        {
-            V = B.Value[j]; // Значение
-            RIndex = B.Col[j]; // Строка в AT
+        int Col = i;  // Столбец в AT - строка в А
+        for (j = j1; j < j2; j++) {
+            V = B.Value[j];  // Значение
+            RIndex = B.Col[j];  // Строка в AT
             IIndex = BT.RowIndex[RIndex + 1];
             BT.Value[IIndex] = V;
             BT.Col[IIndex] = Col;
@@ -136,14 +129,12 @@ void Transp(crsMatrix &B) {
 
     InitializeMatrix(BT.N, BT.NZ, B);
 
-    for (i = 0; i < BT.NZ; i++)
-    {
+    for (i = 0; i < BT.NZ; i++) {
         B.Col[i] = BT.Col[i];
         B.Value[i] = BT.Value[i];
     }
 
-    for (i = 0; i < (BT.N + 1); i++)
-    {
+    for (i = 0; i < (BT.N + 1); i++) {
         B.RowIndex[i] = BT.RowIndex[i];
     }
 
@@ -159,26 +150,19 @@ void Multiplication(const crsMatrix &A, const crsMatrix &B, crsMatrix &C) {
 
 
     row_index.push_back(0);
-    for (i = 0; i < AN; i++)
-    {
+    for (i = 0; i < AN; i++) {
         rowNZ = 0;
-        for (j = 0; j < BN; j++)
-        {
+        for (j = 0; j < BN; j++) {
             double sum = 0;
-            for (k = A.RowIndex[i]; k < A.RowIndex[i + 1]; k++)
-            {
-
-                for (L = B.RowIndex[j]; L < B.RowIndex[j + 1]; L++)
-                {
-                    if (A.Col[k] == B.Col[L])
-                    {
+            for (k = A.RowIndex[i]; k < A.RowIndex[i + 1]; k++) {
+                for (L = B.RowIndex[j]; L < B.RowIndex[j + 1]; L++) {
+                    if (A.Col[k] == B.Col[L]) {
                         sum += A.Value[k] * B.Value[L];
                         break;
                     }
                 }
             }
-            if (fabs(sum) > ZERO_IN_CRS)
-            {
+            if (fabs(sum) > ZERO_IN_CRS) {
                 columns.push_back(j);
                 values.push_back(sum);
                 rowNZ++;
@@ -187,8 +171,7 @@ void Multiplication(const crsMatrix &A, const crsMatrix &B, crsMatrix &C) {
         row_index.push_back(rowNZ + row_index[i]);
     }
     InitializeMatrix(AN, columns.size(), C);
-    for (unsigned int j = 0; j < columns.size(); j++)
-    {
+    for (unsigned int j = 0; j < columns.size(); j++) {
         C.Col[j] = columns[j];
         C.Value[j] = values[j];
     }
@@ -211,8 +194,7 @@ int main(int argc, char **argv) {
     NNZRow = atoi(argv[2]);
 
 
-    if (SizeM < NNZRow)
-    {
+    if (SizeM < NNZRow) {
         printf("Invalid input parameters\n");
         return 1;
     }
