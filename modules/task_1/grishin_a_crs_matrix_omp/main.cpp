@@ -19,11 +19,11 @@ size_t nzA, nzB;
 
 struct crsMatrix
 {
-    int N;//размер матрицы N*N
-    int NZ;//количество ненулевых элементов
-    double* Value;//массив значений (размеров NZ)
-    int* Col;//массив номеров столбцов (размером NZ)
-    int* RowIndex;//массив индексов строк (размером N+1)
+    int N;//СЂР°Р·РјРµСЂ РјР°С‚СЂРёС†С‹ N*N
+    int NZ;//РєРѕР»РёС‡РµСЃС‚РІРѕ РЅРµРЅСѓР»РµРІС‹С… СЌР»РµРјРµРЅС‚РѕРІ
+    double* Value;//РјР°СЃСЃРёРІ Р·РЅР°С‡РµРЅРёР№ (СЂР°Р·РјРµСЂРѕРІ NZ)
+    int* Col;//РјР°СЃСЃРёРІ РЅРѕРјРµСЂРѕРІ СЃС‚РѕР»Р±С†РѕРІ (СЂР°Р·РјРµСЂРѕРј NZ)
+    int* RowIndex;//РјР°СЃСЃРёРІ РёРЅРґРµРєСЃРѕРІ СЃС‚СЂРѕРє (СЂР°Р·РјРµСЂРѕРј N+1)
 };
 
 void InitializeMatrix(int N, int NZ, crsMatrix &mtx)
@@ -48,7 +48,7 @@ void GenerateCRS(crsMatrix& mtx, int n, int cntInRow)
     notNull = cntInRow * n;
     InitializeMatrix(n, notNull, mtx);
     for (i = 0; i < n; i++) {
-        // Формируем номера столбцов в строке i 
+        // Р¤РѕСЂРјРёСЂСѓРµРј РЅРѕРјРµСЂР° СЃС‚РѕР»Р±С†РѕРІ РІ СЃС‚СЂРѕРєРµ i 
         for (j = 0; j < cntInRow; j++)
         {
             do
@@ -60,7 +60,7 @@ void GenerateCRS(crsMatrix& mtx, int n, int cntInRow)
                         f = 1;
             } while (f == 1);
         }
-        // Сортируем номера столбцов в строке i 
+        // РЎРѕСЂС‚РёСЂСѓРµРј РЅРѕРјРµСЂР° СЃС‚РѕР»Р±С†РѕРІ РІ СЃС‚СЂРѕРєРµ i 
         for (j = 0; j < cntInRow - 1; j++)
             for (k = 0; k < cntInRow - 1; k++)
                 if (mtx.Col[i * cntInRow + k] > mtx.Col[i * cntInRow + k + 1])
@@ -106,7 +106,7 @@ void PrintMatrix(crsMatrix &mtx)
 
 
 void Transp(crsMatrix &B) {
-    //BT - траспонированная матрица В
+    //BT - С‚СЂР°СЃРїРѕРЅРёСЂРѕРІР°РЅРЅР°СЏ РјР°С‚СЂРёС†Р° Р’
     crsMatrix BT;
     int tmp = 0, S = 0, IIndex = 0, RIndex = 0, i, j;
     double V = 0.0;
@@ -128,11 +128,11 @@ void Transp(crsMatrix &B) {
 
         int j1 = B.RowIndex[i];
         int j2 = B.RowIndex[i + 1];
-        int Col = i; // Столбец в AT - строка в А
+        int Col = i; // РЎС‚РѕР»Р±РµС† РІ AT - СЃС‚СЂРѕРєР° РІ Рђ
         for (j = j1; j < j2; j++)
         {
-            V = B.Value[j]; // Значение
-            RIndex = B.Col[j]; // Строка в AT
+            V = B.Value[j]; // Р—РЅР°С‡РµРЅРёРµ
+            RIndex = B.Col[j]; // РЎС‚СЂРѕРєР° РІ AT
             IIndex = BT.RowIndex[RIndex + 1];
             BT.Value[IIndex] = V;
             BT.Col[IIndex] = Col;
