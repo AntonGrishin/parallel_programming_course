@@ -14,34 +14,30 @@
 size_t nzA, nzB;
 
 
-struct crsMatrix
-{
-    int N;//размер матрицы N*N
-    int NZ;//количество ненулевых элементов
-    double* Value;//массив значений (размеров NZ)
-    int* Col;//массив номеров столбцов (размером NZ)
-    int* RowIndex;//массив индексов строк (размером N+1)
+struct crsMatrix {
+    int N;  //размер матрицы N*N
+    int NZ;  //количество ненулевых элементов
+    double* Value;  //массив значений (размеров NZ)
+    int* Col;  //массив номеров столбцов (размером NZ)
+    int* RowIndex;  //массив индексов строк (размером N+1)
 };
 
-void InitializeMatrix(int N, int NZ, crsMatrix &mtx)
-{
+void InitializeMatrix(int N, int NZ, crsMatrix &mtx) {
     mtx.N = N;
     mtx.NZ = NZ;
     mtx.Value = new double[NZ];
     mtx.Col = new int[NZ];
     mtx.RowIndex = new int[N + 1];
-
 }
+
 void DeleteMatrix(crsMatrix &mtx) {
     delete[] mtx.Value;
     delete[] mtx.Col;
     delete[] mtx.RowIndex;
 }
 
-void GenerateCRS(crsMatrix& mtx, int n, int cntInRow)
-{
+void GenerateCRS(crsMatrix& mtx, int n, int cntInRow) {
     int i, j, k, f, tmp, notNull, c;
-
     notNull = cntInRow * n;
     InitializeMatrix(n, notNull, mtx);
     for (i = 0; i < n; i++) {
@@ -77,8 +73,7 @@ void GenerateCRS(crsMatrix& mtx, int n, int cntInRow)
     }
 }
 
-void PrintMatrix(crsMatrix &mtx)
-{
+void PrintMatrix(crsMatrix &mtx) {
     int i;
     int k = mtx.NZ;
     int N = mtx.N + 1;
@@ -155,8 +150,7 @@ void Transp(crsMatrix &B) {
     DeleteMatrix(BT);
 }
 
-void Multiplication(const crsMatrix &A, const crsMatrix &B, crsMatrix &C)
-{
+void Multiplication(const crsMatrix &A, const crsMatrix &B, crsMatrix &C) {
 
     int AN = A.N, BN = B.N, rowNZ, i, j, k, L;
     std::vector<int> columns;
@@ -257,5 +251,3 @@ int main(int argc, char **argv) {
 
     return 0;
 }
-
-
