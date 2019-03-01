@@ -101,7 +101,7 @@ void Transp(crsMatrix *B) {
     double V = 0.0;
     InitializeMatrix(B->N, B->NZ, &BT);
 
-    std::memset(BT.RowIndex, 0, ((B->N) + 1) * sizeof(int));
+    memset(BT.RowIndex, 0, ((B->N) + 1) * sizeof(int));
     for (i = 0; i < B->NZ; i++)
         BT.RowIndex[B->Col[i] + 1]++;
 
