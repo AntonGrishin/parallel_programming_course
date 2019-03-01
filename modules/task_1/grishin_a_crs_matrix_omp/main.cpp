@@ -23,21 +23,21 @@ struct crsMatrix {
     int* RowIndex;  //массив индексов строк (размером N+1)
 };
 
-void InitializeMatrix(int N, int NZ, crsMatrix &mtx) {
-    mtx.N = N;
-    mtx.NZ = NZ;
-    mtx.Value = new double[NZ];
-    mtx.Col = new int[NZ];
-    mtx.RowIndex = new int[N + 1];
+void InitializeMatrix(int N, int NZ, crsMatrix *mtx) {
+    mtx->N = N;
+    mtx->NZ = NZ;
+    mtx->Value = new double[NZ];
+    mtx->Col = new int[NZ];
+    mtx->RowIndex = new int[N + 1];
 }
 
-void DeleteMatrix(crsMatrix &mtx) {
-    delete[] mtx.Value;
-    delete[] mtx.Col;
-    delete[] mtx.RowIndex;
+void DeleteMatrix(crsMatrix *mtx) {
+    delete[] mtx->Value;
+    delete[] mtx->Col;
+    delete[] mtx->RowIndex;
 }
 
-void GenerateCRS(crsMatrix& mtx, int n, int cntInRow) {
+void GenerateCRS(crsMatrix *mtx, int n, int cntInRow) {
     int i, j, k, f, tmp, notNull, c;
     notNull = cntInRow * n;
     InitializeMatrix(n, notNull, mtx);
@@ -45,48 +45,48 @@ void GenerateCRS(crsMatrix& mtx, int n, int cntInRow) {
         // Формируем номера столбцов в строке i
         for (j = 0; j < cntInRow; j++) {
             do {
-                mtx.Col[i * cntInRow + j] = rand() % n;
+                mtx->Col[i * cntInRow + j] = rand() % n;
                 f = 0;
                 for (k = 0; k < j; k++)
-                    if (mtx.Col[i * cntInRow + j] == mtx.Col[i * cntInRow + k])
+                    if (mtx->Col[i * cntInRow + j] == mtx->Col[i * cntInRow + k])
                         f = 1;
             } while (f == 1);
         }
-        // Сортируем номера столбцов в строке i 
+        // Сортируем номера столбцов в строке i
         for (j = 0; j < cntInRow - 1; j++)
             for (k = 0; k < cntInRow - 1; k++)
-                if (mtx.Col[i * cntInRow + k] > mtx.Col[i * cntInRow + k + 1]) {
-                    tmp = mtx.Col[i * cntInRow + k];
-                    mtx.Col[i * cntInRow + k] = mtx.Col[i * cntInRow + k + 1];
-                    mtx.Col[i * cntInRow + k + 1] = tmp;
+                if (mtx->Col[i * cntInRow + k] > mtx->Col[i * cntInRow + k + 1]) {
+                    tmp = mtx->Col[i * cntInRow + k];
+                    mtx->Col[i * cntInRow + k] = mtx->Col[i * cntInRow + k + 1];
+                    mtx->Col[i * cntInRow + k + 1] = tmp;
                 }
     }
     for (i = 0; i < cntInRow * n; i++)
-        mtx.Value[i] = rand() % 9 + 1;
+        mtx->Value[i] = rand() % 9 + 1;
     c = 0;
     for (i = 0; i <= n; i++) {
-        mtx.RowIndex[i] = c;
+        mtx->RowIndex[i] = c;
         c += cntInRow;
     }
 }
 
-void PrintMatrix(crsMatrix &mtx) {
+void PrintMatrix(crsMatrix *mtx) {
     int i;
-    int k = mtx.NZ;
-    int N = mtx.N + 1;
+    int k = mtx->NZ;
+    int N = mtx->N + 1;
 
     printf("Matrix in CRS: \n");
     printf("\n Value: ");
     for (i = 0; i < k; i++) {
-        printf(" %.1f", mtx.Value[i]);
+        printf(" %.1f", mtx->Value[i]);
     }
     printf("\n Col: ");
     for (i = 0; i < k; i++) {
-        printf(" %d", mtx.Col[i]);
+        printf(" %d", mtx->Col[i]);
     }
     printf("\n RowIndex: ");
     for (i = 0; i < N; i++) {
-        printf(" %d", mtx.RowIndex[i]);
+        printf(" %d", mtx->RowIndex[i]);
     }
     printf("\n");
     fflush(stdout);
@@ -94,30 +94,30 @@ void PrintMatrix(crsMatrix &mtx) {
 
 
 
-void Transp(crsMatrix &B) {
-    //BT - траспонированная матрица В
+void Transp(crsMatrix *B) {
+    // BT - траспонированная матрица В
     crsMatrix BT;
     int tmp = 0, S = 0, IIndex = 0, RIndex = 0, i, j;
     double V = 0.0;
-    InitializeMatrix(B.N, B.NZ, BT);
+    InitializeMatrix(B->N, B->NZ, &BT);
 
-    memset(BT.RowIndex, 0, ((B.N) + 1) * sizeof(int));
-    for (i = 0; i < B.NZ; i++)
-        BT.RowIndex[B.Col[i] + 1]++;
+    memset(BT.RowIndex, 0, ((B->N) + 1) * sizeof(int));
+    for (i = 0; i < B->NZ; i++)
+        BT.RowIndex[B->Col[i] + 1]++;
 
-    for (i = 1; i <= B.N; i++) {
+    for (i = 1; i <= B->N; i++) {
         tmp = BT.RowIndex[i];
         BT.RowIndex[i] = S;
         S = S + tmp;
     }
 
-    for (i = 0; i < B.N; i++) {
-        int j1 = B.RowIndex[i];
-        int j2 = B.RowIndex[i + 1];
+    for (i = 0; i < B->N; i++) {
+        int j1 = B->RowIndex[i];
+        int j2 = B->RowIndex[i + 1];
         int Col = i;  // Столбец в AT - строка в А
         for (j = j1; j < j2; j++) {
-            V = B.Value[j];  // Значение
-            RIndex = B.Col[j];  // Строка в AT
+            V = B->Value[j];  // Значение
+            RIndex = B->Col[j];  // Строка в AT
             IIndex = BT.RowIndex[RIndex + 1];
             BT.Value[IIndex] = V;
             BT.Col[IIndex] = Col;
@@ -130,19 +130,18 @@ void Transp(crsMatrix &B) {
     InitializeMatrix(BT.N, BT.NZ, B);
 
     for (i = 0; i < BT.NZ; i++) {
-        B.Col[i] = BT.Col[i];
-        B.Value[i] = BT.Value[i];
+        B->Col[i] = BT.Col[i];
+        B->Value[i] = BT.Value[i];
     }
 
     for (i = 0; i < (BT.N + 1); i++) {
-        B.RowIndex[i] = BT.RowIndex[i];
+        B->RowIndex[i] = BT.RowIndex[i];
     }
 
-    DeleteMatrix(BT);
+    DeleteMatrix(&BT);
 }
 
-void Multiplication(const crsMatrix &A, const crsMatrix &B, crsMatrix &C) {
-
+void Multiplication(const crsMatrix &A, const crsMatrix &B, crsMatrix *C) {
     int AN = A.N, BN = B.N, rowNZ, i, j, k, L;
     std::vector<int> columns;
     std::vector<double> values;
@@ -172,23 +171,19 @@ void Multiplication(const crsMatrix &A, const crsMatrix &B, crsMatrix &C) {
     }
     InitializeMatrix(AN, columns.size(), C);
     for (unsigned int j = 0; j < columns.size(); j++) {
-        C.Col[j] = columns[j];
-        C.Value[j] = values[j];
+        C->Col[j] = columns[j];
+        C->Value[j] = values[j];
     }
     for (int i = 0; i <= AN; i++)
-        C.RowIndex[i] = row_index[i];
-
+        C->RowIndex[i] = row_index[i];
 }
 
 
 
 int main(int argc, char **argv) {
-
     double serialTime;
     int SizeM = NULL, NNZRow = NULL;
     crsMatrix A, B, C;
-
-
 
     SizeM = atoi(argv[1]);
     NNZRow = atoi(argv[2]);
@@ -200,11 +195,11 @@ int main(int argc, char **argv) {
     }
 
 
-    GenerateCRS(A, SizeM, NNZRow);
-    GenerateCRS(B, SizeM, NNZRow);
-    Transp(B);
+    GenerateCRS(&A, SizeM, NNZRow);
+    GenerateCRS(&B, SizeM, NNZRow);
+    Transp(&B);
     serialTime = omp_get_wtime();
-    Multiplication(A, B, C);
+    Multiplication(A, B, &C);
 
     serialTime = omp_get_wtime() - serialTime;
 
@@ -217,19 +212,19 @@ int main(int argc, char **argv) {
 
     if (SizeM < 10) {
         std::cout << "A_________________________" << std::endl;
-        PrintMatrix(A);
+        PrintMatrix(&A);
         std::cout << "Transp B__________________" << std::endl;
-        PrintMatrix(B);
-        Transp(B);
+        PrintMatrix(&B);
+        Transp(&B);
         std::cout << "B_________________________" << std::endl;
-        PrintMatrix(B);
+        PrintMatrix(&B);
         std::cout << "Serial Result_____________" << std::endl;
-        PrintMatrix(C);
+        PrintMatrix(&C);
     }
 
-    DeleteMatrix(A);
-    DeleteMatrix(B);
-    DeleteMatrix(C);
+    DeleteMatrix(&A);
+    DeleteMatrix(&B);
+    DeleteMatrix(&C);
 
     return 0;
 }
