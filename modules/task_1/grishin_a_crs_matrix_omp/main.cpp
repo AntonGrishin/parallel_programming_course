@@ -101,7 +101,7 @@ void Transp(crsMatrix *B) {
     double V = 0.0;
     InitializeMatrix(B->N, B->NZ, &BT);
 
-    memset(BT.RowIndex, 0, ((B->N) + 1) * sizeof(int));
+    std::memset(BT.RowIndex, 0, ((B->N) + 1) * sizeof(int));
     for (i = 0; i < B->NZ; i++)
         BT.RowIndex[B->Col[i] + 1]++;
 
@@ -182,7 +182,7 @@ void Multiplication(const crsMatrix &A, const crsMatrix &B, crsMatrix *C) {
 
 int main(int argc, char **argv) {
     double serialTime;
-    int SizeM = NULL, NNZRow = NULL;
+    int SizeM = 0, NNZRow = 0;
     crsMatrix A, B, C;
 
     SizeM = atoi(argv[1]);
