@@ -2,7 +2,7 @@
 
 #include <omp.h>
 #include <vector>
-#include <string.h>
+#include <cstring>
 #include <cmath>
 #include <iomanip>
 #include <cstdlib>
