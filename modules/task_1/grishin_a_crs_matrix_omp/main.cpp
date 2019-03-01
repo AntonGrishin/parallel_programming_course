@@ -1,12 +1,8 @@
-// Copyright 2019 Zinoviev Vladimir
+// Copyright 2019 Anton Grishin
 
 #include <omp.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <vector>
-#include <math.h>
-#include <Windows.h>
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 
@@ -217,7 +213,7 @@ int main(int argc, char **argv) {
     double serialTime;
     int SizeM = NULL, NNZRow = NULL;
     crsMatrix A, B, C;
-    int NZB, NZC = 0;
+
 
 
     SizeM = atoi(argv[1]);
@@ -238,7 +234,7 @@ int main(int argc, char **argv) {
     Multiplication(A, B, C);
 
     serialTime = omp_get_wtime() - serialTime;
-    NZB = B.NZ;
+
 
     cout << "Size of matrix = " << SizeM << "x" << SizeM << endl;
     cout << "Not NULL elements in ROW = " << NNZRow << endl;
