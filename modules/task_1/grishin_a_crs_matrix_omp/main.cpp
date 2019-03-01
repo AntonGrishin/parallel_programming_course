@@ -45,7 +45,7 @@ void GenerateCRS(crsMatrix *mtx, int n, int cntInRow) {
         // Формируем номера столбцов в строке i
         for (j = 0; j < cntInRow; j++) {
             do {
-                mtx->Col[i * cntInRow + j] = rand() % n;
+                mtx->Col[i * cntInRow + j] = std::rand() % n;
                 f = 0;
                 for (k = 0; k < j; k++)
                     if (mtx->Col[i * cntInRow + j] == mtx->Col[i * cntInRow + k])
@@ -62,7 +62,7 @@ void GenerateCRS(crsMatrix *mtx, int n, int cntInRow) {
                 }
     }
     for (i = 0; i < cntInRow * n; i++)
-        mtx->Value[i] = rand() % 9 + 1;
+        mtx->Value[i] = std::rand() % 9 + 1;
     c = 0;
     for (i = 0; i <= n; i++) {
         mtx->RowIndex[i] = c;
