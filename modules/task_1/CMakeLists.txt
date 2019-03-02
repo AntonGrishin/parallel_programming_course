@@ -5,3 +5,5 @@ add_subdirectory(khomenko_a_shell_sort_w_simple_merge_omp)
 add_subdirectory(gladyshev_a_gauss_omp)
 add_subdirectory(zinoviev_v_shtrassen_mul_omp)
 add_subdirectory(krasikova_e_cannon_omp)
+add_subdirectory(grishin_a_crs_matrix_omp)
+
