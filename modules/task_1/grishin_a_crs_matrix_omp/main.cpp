@@ -186,14 +186,24 @@ int main(int argc, char **argv) {
     int SizeM = 0, NNZRow = 0;
     crsMatrix A, B, C;
 
-    SizeM = atoi(argv[1]);
-    NNZRow = atoi(argv[2]);
+    if (argc > 2)
+    {
+        SizeM = atoi(argv[1]);
+        NNZRow = atoi(argv[2]);
+    }
+    else
+    {
+        SizeM = 4;
+        NNZRow = 2;
+    }
+    
 
 
     if (SizeM < NNZRow) {
         printf("Invalid input parameters\n");
         return 1;
     }
+    
 
 
     GenerateCRS(&A, SizeM, NNZRow);
