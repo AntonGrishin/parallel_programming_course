@@ -7,7 +7,7 @@
 #include <iomanip>
 #include <cstdlib>
 #include <iostream>
-
+#include <algorithm>
 
 #define MAX_NZ 1000000
 #define ZERO_IN_CRS 0.000001
@@ -107,13 +107,20 @@ void Transp(crsMatrix *B) {
     memset(BT.RowIndex, 0, ((B->N) + 1) * sizeof(int));
     for (i = 0; i < B->NZ; i++)
         BT.RowIndex[B->Col[i] + 1]++;
+    // храним кол-во элементов в столбце j-1 матрицы B
 
+    // теперь сделаем так, что RI[i] хранит индекс начала i-1 строки
     for (i = 1; i <= B->N; i++) {
         tmp = BT.RowIndex[i];
         BT.RowIndex[i] = S;
         S = S + tmp;
     }
 
+    //Поместим значения в корректную позицию (RI известно).
+    //Зная, что j строка начинается с RI(j+1), добавляем
+    // V и i в Value и Col соответственно, после чего
+    //увеличим RI(j+1) на единицу (теперь элемент будет хранить начало j+1)
+    //строки
     for (i = 0; i < B->N; i++) {
         int j1 = B->RowIndex[i];
         int j2 = B->RowIndex[i + 1];
@@ -232,7 +239,7 @@ void MultiplicationCompare(const crsMatrix &A,
 int Validate(const crsMatrix &A, const crsMatrix &B) {
     int i, NZ = A.NZ;
     if ((A.NZ != B.NZ) || (A.N != B.N))
-        return false;
+        return 0;
     for (i = 0; i < NZ; i++)
         if ((A.Col[i] != B.Col[i]) || (fabs(A.Value[i] - B.Value[i]) > EPS))
             return 0;
