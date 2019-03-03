@@ -1,4 +1,4 @@
-set(PROJECT_NAME "grishin_a_crs_martix_omp")
+set(PROJECT_NAME "grishin_a_crs_martix_task2_omp")
 
 if ( USE_OMP )
     project( ${PROJECT_NAME} )
