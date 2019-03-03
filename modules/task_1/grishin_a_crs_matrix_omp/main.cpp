@@ -229,12 +229,20 @@ void MultiplicationCompare(const crsMatrix &A,
         C->RowIndex[i] = row_index[i];
 }
 
-
+int Validate(const crsMatrix &A, const crsMatrix &B) {
+    int i, NZ = A.NZ;
+    if ((A.NZ != B.NZ) || (A.N != B.N))
+        return false;
+    for (i = 0; i < NZ; i++)
+        if ((A.Col[i] != B.Col[i]) || (fabs(A.Value[i] - B.Value[i]) > EPS))
+            return 0;
+    return 1;
+}
 
 int main(int argc, char **argv) {
-    double serialTime;
+    double serialTime, serialTime2;
     int SizeM = 0, NNZRow = 0;
-    crsMatrix A, B, C;
+    crsMatrix A, B, C, D;
 
     if (argc > 2) {
         SizeM = atoi(argv[1]);
@@ -255,15 +263,24 @@ int main(int argc, char **argv) {
     Transp(&B);
     serialTime = omp_get_wtime();
     Multiplication(A, B, &C);
-
     serialTime = omp_get_wtime() - serialTime;
+
+    serialTime2 = omp_get_wtime();
+    Multiplication(A, B, &D);
+    serialTime2 = omp_get_wtime() - serialTime2;
 
 
     std::cout << "Size of matrix = " << SizeM << "x" << SizeM << std::endl;
     std::cout << "Not NULL elements in ROW = " << NNZRow << std::endl;
     std::cout << "Serial Time: " <<
         std::fixed << std::setprecision(8) << serialTime << std::endl;
+    std::cout << "Serial Time (another func): " <<
+        std::fixed << std::setprecision(8) << serialTime2 << std::endl;
 
+    if (Validate(C, D) == 1)
+        std::cout << "Serial matrix equal!" << std::endl;
+    else
+        std::cout << "Serial Matrix not equal!" << std::endl;
 
 
     if (SizeM < 10) {
