@@ -240,6 +240,10 @@ void MultiplicationCompare(const crsMatrix &A,
 void MultiplicationOMP(const crsMatrix &A,
     const crsMatrix &B, crsMatrix *C) {
     int N = A.N;
+    // Продублируем все необходимые элементы по кол-ву строк,
+    // для решения проблемы с Push_back
+    // После всех вычислений соберем необходимые
+    // данные в нужные элементы решения
     std::vector<int>* columns = new std::vector<int>[N];
     std::vector<double>* values = new std::vector<double>[N];
     int *row_index = new int[N + 1];

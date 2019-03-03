@@ -1,2 +1,3 @@
 message(STATUS "Task 2")
+add_subdirectory(gladyshev_a_gauss_block_omp)
 add_subdirectory(grishin_a_crs_matrix_task2_omp)
