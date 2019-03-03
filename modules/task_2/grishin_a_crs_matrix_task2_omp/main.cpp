@@ -236,6 +236,75 @@ void MultiplicationCompare(const crsMatrix &A,
         C->RowIndex[i] = row_index[i];
 }
 
+
+void MultiplicationOMP(const crsMatrix &A,
+    const crsMatrix &B, crsMatrix *C) {
+    int N = A.N;
+    std::vector<int>* columns = new std::vector<int>[N];
+    std::vector<double>* values = new std::vector<double>[N];
+    int *row_index = new int[N + 1];
+    int i = 0, j = 0, ks = 0, ls = 0, kf = 0, lf = 0;
+
+    memset(row_index, 0, sizeof(int) * N);
+
+#pragma omp parallel
+    {
+#pragma omp for private (j, ks, ls, kf, lf)
+        for (i = 0; i < A.N; i++) {
+            for (j = 0; j < B.N; j++) {
+                // Умножаем строку i матрицы A и столбец j матрицы B
+                double sum = 0;
+                ks = A.RowIndex[i];
+                ls = B.RowIndex[j];
+                kf = A.RowIndex[i + 1] - 1;
+                lf = B.RowIndex[j + 1] - 1;
+                while ((ks <= kf) && (ls <= lf)) {
+                    if (A.Col[ks] < B.Col[ls]) {
+                        ks++;
+                    } else {
+                        if (A.Col[ks] > B.Col[ls]) {
+                            ls++;
+                        } else {
+                            sum += A.Value[ks] * B.Value[ls];
+                            ks++;
+                            ls++;
+                        }
+                    }
+                }
+                if (fabs(sum) > ZERO_IN_CRS) {
+                    columns[i].push_back(j);
+                    values[i].push_back(sum);
+                    row_index[i]++;
+                }
+            }
+        }
+    }
+
+    int NZ = 0;
+    for (i = 0; i < N; i++) {
+        int tmp = row_index[i];
+        row_index[i] = NZ;
+        NZ += tmp;
+    }
+    row_index[N] = NZ;
+
+    InitializeMatrix(N, NZ, C);
+
+    int count = 0;
+    for (i = 0; i < N; i++) {
+        int size = columns[i].size();
+        memcpy(&(*C).Col[count], &columns[i][0], size * sizeof(int));
+        memcpy(&(*C).Value[count], &values[i][0], size * sizeof(double));
+        count += size;
+    }
+
+    memcpy(C->RowIndex, &row_index[0], (N + 1) * sizeof(int));
+    delete[] row_index;
+    delete[] columns;
+    delete[] values;
+}
+
+
 int Validate(const crsMatrix &A, const crsMatrix &B) {
     int i, NZ = A.NZ;
     if ((A.NZ != B.NZ) || (A.N != B.N))
@@ -247,16 +316,19 @@ int Validate(const crsMatrix &A, const crsMatrix &B) {
 }
 
 int main(int argc, char **argv) {
-    double serialTime, serialTime2;
+    double serialTime, serialTime2, parallelTime;
+    int num_threads;
     int SizeM = 0, NNZRow = 0;
-    crsMatrix A, B, C, D;
+    crsMatrix A, B, C, D, C_omp;
 
-    if (argc > 2) {
+    if (argc > 3) {
         SizeM = atoi(argv[1]);
         NNZRow = atoi(argv[2]);
+        num_threads = atoi(argv[3]);
     } else {
         SizeM = 4;
         NNZRow = 2;
+        num_threads = 4;
     }
 
     if (SizeM < NNZRow) {
@@ -264,31 +336,52 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-
+    std::cout << "Generate CRS matrix..." << std::endl;
     GenerateCRS(&A, SizeM, NNZRow);
     GenerateCRS(&B, SizeM, NNZRow);
+    std::cout << "Transpose B matrix..." << std::endl;
     Transp(&B);
+    std::cout << "Starting first serial alghorithm..." << std::endl;
     serialTime = omp_get_wtime();
     Multiplication(A, B, &C);
     serialTime = omp_get_wtime() - serialTime;
-
+    std::cout << "Starting second serial alghorithm..." << std::endl;
     serialTime2 = omp_get_wtime();
     Multiplication(A, B, &D);
     serialTime2 = omp_get_wtime() - serialTime2;
 
+    std::cout << "Starting parallel alghorithm..." << std::endl;
+    // parallel version
+    omp_set_num_threads(num_threads);
+    parallelTime = omp_get_wtime();
+    MultiplicationOMP(A, B, &C_omp);
+    parallelTime = omp_get_wtime() - parallelTime;
 
+    std::cout << "Num threads = " << num_threads << std::endl;
     std::cout << "Size of matrix = " << SizeM << "x" << SizeM << std::endl;
     std::cout << "Not NULL elements in ROW = " << NNZRow << std::endl;
     std::cout << "Serial Time: " <<
         std::fixed << std::setprecision(8) << serialTime << std::endl;
     std::cout << "Serial Time (another func): " <<
         std::fixed << std::setprecision(8) << serialTime2 << std::endl;
+    std::cout << "Parallel Time: " <<
+        std::fixed << std::setprecision(8) << parallelTime << std::endl;
+    std::cout << "Acceleration: " <<
+        std::fixed << std::setprecision(8) <<
+        serialTime2/parallelTime << std::endl;
 
+
+    std::cout << "Validating in process..." << std::endl;
     if (Validate(C, D) == 1)
-        std::cout << "Serial matrix equal!" << std::endl;
+        std::cout << "Serial solves are equal!" << std::endl;
     else
-        std::cout << "Serial Matrix not equal!" << std::endl;
+        std::cout << "Serial solves are not equal!" << std::endl;
 
+
+    if (Validate(D, C_omp) == 1)
+        std::cout << "Serial and parallel solve are equal!" << std::endl;
+    else
+        std::cout << "Serial and parallel solve are not equal!" << std::endl;
 
     if (SizeM < 10) {
         std::cout << "A_________________________" << std::endl;
@@ -300,6 +393,8 @@ int main(int argc, char **argv) {
         PrintMatrix(&B);
         std::cout << "Serial Result_____________" << std::endl;
         PrintMatrix(&C);
+        std::cout << "Parallel Result_____________" << std::endl;
+        PrintMatrix(&C_omp);
     }
 
     DeleteMatrix(&A);
