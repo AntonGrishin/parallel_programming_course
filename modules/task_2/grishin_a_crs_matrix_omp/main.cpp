@@ -7,7 +7,7 @@
 #include <iomanip>
 #include <cstdlib>
 #include <iostream>
-
+#include <algorithm>
 
 #define MAX_NZ 1000000
 #define ZERO_IN_CRS 0.000001
@@ -107,13 +107,20 @@ void Transp(crsMatrix *B) {
     memset(BT.RowIndex, 0, ((B->N) + 1) * sizeof(int));
     for (i = 0; i < B->NZ; i++)
         BT.RowIndex[B->Col[i] + 1]++;
+    // храним кол-во элементов в столбце j-1 матрицы B
 
+    // теперь сделаем так, что RI[i] хранит индекс начала i-1 строки
     for (i = 1; i <= B->N; i++) {
         tmp = BT.RowIndex[i];
         BT.RowIndex[i] = S;
         S = S + tmp;
     }
 
+    //Поместим значения в корректную позицию (RI известно).
+    //Зная, что j строка начинается с RI(j+1), добавляем
+    // V и i в Value и Col соответственно, после чего
+    //увеличим RI(j+1) на единицу (теперь элемент будет хранить начало j+1)
+    //строки
     for (i = 0; i < B->N; i++) {
         int j1 = B->RowIndex[i];
         int j2 = B->RowIndex[i + 1];
@@ -182,11 +189,67 @@ void Multiplication(const crsMatrix &A, const crsMatrix &B, crsMatrix *C) {
 }
 
 
+void MultiplicationCompare(const crsMatrix &A,
+                            const crsMatrix &B, crsMatrix *C) {
+    int N = A.N;
+    std::vector<int> columns;
+    std::vector<double> values;
+    std::vector<int> row_index;
+    int NZ = 0;
+    row_index.push_back(0);
+    for (int i = 0; i < A.N; i++) {
+        for (int j = 0; j < B.N; j++) {
+            // Умножаем строку i матрицы A и столбец j матрицы B
+            double sum = 0;
+            int ks = A.RowIndex[i];
+            int ls = B.RowIndex[j];
+            int kf = A.RowIndex[i + 1] - 1;
+            int lf = B.RowIndex[j + 1] - 1;
+            while ((ks <= kf) && (ls <= lf)) {
+                if (A.Col[ks] < B.Col[ls]) {
+                    ks++;
+                } else {
+                    if (A.Col[ks] > B.Col[ls]) {
+                        ls++;
+                    } else {
+                        sum += A.Value[ks] * B.Value[ls];
+                        ks++;
+                        ls++;
+                    }
+                }
+            }
+            if (fabs(sum) > ZERO_IN_CRS) {
+                columns.push_back(j);
+                values.push_back(sum);
+                NZ++;
+            }
+        }
+        row_index.push_back(NZ);
+    }
+    InitializeMatrix(N, NZ, C);
+
+    for (unsigned int j = 0; j < columns.size(); j++) {
+        C->Col[j] = columns[j];
+        C->Value[j] = values[j];
+    }
+    for (int i = 0; i <= N; i++)
+        C->RowIndex[i] = row_index[i];
+}
+
+int Validate(const crsMatrix &A, const crsMatrix &B) {
+    int i, NZ = A.NZ;
+    if ((A.NZ != B.NZ) || (A.N != B.N))
+        return 0;
+    for (i = 0; i < NZ; i++)
+        if ((A.Col[i] != B.Col[i]) || (fabs(A.Value[i] - B.Value[i]) > EPS))
+            return 0;
+    return 1;
+}
 
 int main(int argc, char **argv) {
-    double serialTime;
+    double serialTime, serialTime2;
     int SizeM = 0, NNZRow = 0;
-    crsMatrix A, B, C;
+    crsMatrix A, B, C, D;
 
     if (argc > 2) {
         SizeM = atoi(argv[1]);
@@ -207,15 +270,24 @@ int main(int argc, char **argv) {
     Transp(&B);
     serialTime = omp_get_wtime();
     Multiplication(A, B, &C);
-
     serialTime = omp_get_wtime() - serialTime;
+
+    serialTime2 = omp_get_wtime();
+    Multiplication(A, B, &D);
+    serialTime2 = omp_get_wtime() - serialTime2;
 
 
     std::cout << "Size of matrix = " << SizeM << "x" << SizeM << std::endl;
     std::cout << "Not NULL elements in ROW = " << NNZRow << std::endl;
     std::cout << "Serial Time: " <<
         std::fixed << std::setprecision(8) << serialTime << std::endl;
+    std::cout << "Serial Time (another func): " <<
+        std::fixed << std::setprecision(8) << serialTime2 << std::endl;
 
+    if (Validate(C, D) == 1)
+        std::cout << "Serial matrix equal!" << std::endl;
+    else
+        std::cout << "Serial Matrix not equal!" << std::endl;
 
 
     if (SizeM < 10) {
