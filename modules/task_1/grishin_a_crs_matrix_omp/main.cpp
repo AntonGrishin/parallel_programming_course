@@ -49,14 +49,16 @@ void GenerateCRS(crsMatrix *mtx, int n, int cntInRow) {
                 mtx->Col[i * cntInRow + j] = std::rand() % n;
                 f = 0;
                 for (k = 0; k < j; k++)
-                    if (mtx->Col[i * cntInRow + j] == mtx->Col[i * cntInRow + k])
+                    if (mtx->Col[i * cntInRow + j]
+                        == mtx->Col[i * cntInRow + k])
                         f = 1;
             } while (f == 1);
         }
         // Сортируем номера столбцов в строке i
         for (j = 0; j < cntInRow - 1; j++)
             for (k = 0; k < cntInRow - 1; k++)
-                if (mtx->Col[i * cntInRow + k] > mtx->Col[i * cntInRow + k + 1]) {
+                if (mtx->Col[i * cntInRow + k]
+                    > mtx->Col[i * cntInRow + k + 1]) {
                     tmp = mtx->Col[i * cntInRow + k];
                     mtx->Col[i * cntInRow + k] = mtx->Col[i * cntInRow + k + 1];
                     mtx->Col[i * cntInRow + k + 1] = tmp;
@@ -180,6 +182,54 @@ void Multiplication(const crsMatrix &A, const crsMatrix &B, crsMatrix *C) {
 }
 
 
+void MultiplicationCompare(const crsMatrix &A,
+                            const crsMatrix &B, crsMatrix *C) {
+    int N = A.N;
+    std::vector<int> columns;
+    std::vector<double> values;
+    std::vector<int> row_index;
+    int NZ = 0;
+    row_index.push_back(0);
+    for (int i = 0; i < A.N; i++) {
+        for (int j = 0; j < B.N; j++) {
+            // Умножаем строку i матрицы A и столбец j матрицы B
+            double sum = 0;
+            int ks = A.RowIndex[i];
+            int ls = B.RowIndex[j];
+            int kf = A.RowIndex[i + 1] - 1;
+            int lf = B.RowIndex[j + 1] - 1;
+            while ((ks <= kf) && (ls <= lf)) {
+                if (A.Col[ks] < B.Col[ls]) {
+                    ks++;
+                } else {
+                    if (A.Col[ks] > B.Col[ls]) {
+                        ls++;
+                    } else {
+                        sum += A.Value[ks] * B.Value[ls];
+                        ks++;
+                        ls++;
+                    }
+                }
+            }
+            if (fabs(sum) > ZERO_IN_CRS) {
+                columns.push_back(j);
+                values.push_back(sum);
+                NZ++;
+            }
+        }
+        row_index.push_back(NZ);
+    }
+    InitializeMatrix(N, NZ, C);
+
+    for (unsigned int j = 0; j < columns.size(); j++) {
+        C->Col[j] = columns[j];
+        C->Value[j] = values[j];
+    }
+    for (int i = 0; i <= N; i++)
+        C->RowIndex[i] = row_index[i];
+}
+
+
 
 int main(int argc, char **argv) {
     double serialTime;
@@ -211,7 +261,8 @@ int main(int argc, char **argv) {
 
     std::cout << "Size of matrix = " << SizeM << "x" << SizeM << std::endl;
     std::cout << "Not NULL elements in ROW = " << NNZRow << std::endl;
-    std::cout << "Serial Time: " << std::fixed << std::setprecision(8) << serialTime << std::endl;
+    std::cout << "Serial Time: " <<
+        std::fixed << std::setprecision(8) << serialTime << std::endl;
 
 
 
