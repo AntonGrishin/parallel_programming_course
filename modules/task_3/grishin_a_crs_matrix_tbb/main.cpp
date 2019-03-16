@@ -255,7 +255,7 @@ void MultiplicationTBB(const crsMatrix &A,
     std::vector<int>* columns = new std::vector<int>[N];
     std::vector<double>* values = new std::vector<double>[N];
     int *row_index = new int[N + 1];
-    int i = 0, j = 0, ks = 0, ls = 0, kf = 0, lf = 0;
+    int i = 0;
 
     memset(row_index, 0, sizeof(int) * N);
 
